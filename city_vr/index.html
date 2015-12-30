@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Procedural city VR</title>
+	<!-- <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> -->
+    <!-- <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"> -->
+
+	<script src="../js/three.js"></script>
+	<script src="../js/StereoEffect.js"></script>
+	<script type="text/javascript" src="../js/FirstPersonControls.js"></script>
+	<script src="../js/DeviceOrientationControls.js"></script>
+	<script src="../js/OrbitControls.js"></script>
+	<script src="../js/threex.proceduralcity.js"></script>
+
+	<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+	<div id="container"></div>
+	<script type="text/javascript">
+
+	    var camera, scene, renderer;
+	    var effect, controls;
+	    var element, container;
+
+	    var clock = new THREE.Clock();
+
+	    init();
+	    animate();
+
+	    function init() {
+				scene = new THREE.Scene();
+				scene.fog	= new THREE.FogExp2( 0xd0e0f0, 0.0025 );
+
+	      renderer = new THREE.WebGLRenderer();
+	      renderer.setSize( window.innerWidth, window.innerHeight );
+	      element = renderer.domElement;
+	      container = document.getElementById('container');
+	      container.appendChild(element);
+
+	      camera = new THREE.PerspectiveCamera(90, window.innerWidth/window.innerHeight, 0.01, 3000);
+	      camera.position.set(-500, 100, -200);
+	      scene.add(camera);
+
+				effect = new THREE.StereoEffect(renderer);
+
+				var light = new THREE.HemisphereLight(0xfffff0, 0x101020, 1.5);
+				light.position.set( 0.75, 1, 0.25 );
+				scene.add(light);
+
+				var material	= new THREE.MeshBasicMaterial({ color: 0x101018 })
+				var geometry	= new THREE.PlaneGeometry( 2000, 2000 )
+				var plane	= new THREE.Mesh( geometry, material );
+				plane.rotation.x= - 90 * Math.PI / 180;
+				scene.add( plane );
+
+				var city	= new THREEx.ProceduralCity()
+				scene.add(city)
+
+				controls	= new THREE.FirstPersonControls( camera );
+				controls.movementSpeed	= 20;
+				controls.lookSpeed	= 0.05;
+				controls.lookVertical	= true;
+
+	      function setOrientationControls(e) {
+	        if (!e.alpha) {
+	          return;
+	        }
+
+	        controls = new THREE.DeviceOrientationControls(camera, true);
+	        controls.connect();
+	        controls.update();
+
+	        element.addEventListener('click', fullscreen, false);
+
+	        window.removeEventListener('deviceorientation', setOrientationControls, true);
+	      }
+	      window.addEventListener('deviceorientation', setOrientationControls, true);
+
+	      window.addEventListener('resize', resize, false);
+	      setTimeout(resize, 1);
+	    }
+
+	    function resize() {
+	      var width = container.offsetWidth;
+	      var height = container.offsetHeight;
+
+	      camera.aspect = width / height;
+	      camera.updateProjectionMatrix();
+
+	      renderer.setSize(width, height);
+	      effect.setSize(width, height);
+	    }
+
+	    function update(dt) {
+	      resize();
+
+	      camera.updateProjectionMatrix();
+
+	      controls.update(dt);
+	    }
+
+	    function render(dt) {
+	      effect.render(scene, camera);
+	    }
+
+	    function animate(t) {
+	      requestAnimationFrame(animate);
+
+	      update(clock.getDelta());
+	      render(clock.getDelta());
+	    }
+
+	    function fullscreen() {
+	      if (container.requestFullscreen) {
+	        container.requestFullscreen();
+	      } else if (container.msRequestFullscreen) {
+	        container.msRequestFullscreen();
+	      } else if (container.mozRequestFullScreen) {
+	        container.mozRequestFullScreen();
+	      } else if (container.webkitRequestFullscreen) {
+	        container.webkitRequestFullscreen();
+	      }
+	    }
+
+	</script>
+</body>
+</html>
